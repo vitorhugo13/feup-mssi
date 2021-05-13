@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- generated on Thu May 13 18:14:43 2021 by Eclipse SUMO duarouter Version 1.8.0
+<configuration xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://sumo.dlr.de/xsd/duarouterConfiguration.xsd">
+
+    <input>
+        <net-file value="5km.net.xml"/>
+        <route-files value="5km.trips.xml"/>
+    </input>
+
+    <output>
+        <output-file value="5km.rou.xml"/>
+        <alternatives-output value="5km.rou.alt.xml"/>
+    </output>
+
+</configuration>
+-->
+
+<routes>
+	<vType id="routeByDistance" maxSpeed="1"/>
+</routes>
