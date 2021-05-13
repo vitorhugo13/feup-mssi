@@ -8,10 +8,15 @@ import traci
 def run():
 
     step = 0
+
+
+    res = traci.simulation.findRoute('start', 'end', 'routeByDistance')
+    traci.route.add('trip', res.edges)
+    traci.vehicle.add('new_veh', 'trip')
+
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()
         print(step)
-
         step += 1
 
     traci.close()
