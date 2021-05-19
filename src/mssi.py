@@ -20,6 +20,13 @@ def run():
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()
         print(step)
+        print(f'Carros a correr {traci.simulation.getMinExpectedNumber()}')
+        accels = map(lambda x: traci.vehicle.getAcceleration(x) ,traci.vehicle.getIDList())
+        accels = list(accels)
+        types = map(lambda x: traci.vehicle.getTypeID(x) ,traci.vehicle.getIDList())
+        types = list(types)
+        print(f'{accels}')
+        print(f'{types}')
         step += 1
 
     traci.close()
