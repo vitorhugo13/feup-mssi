@@ -10,9 +10,12 @@ def run():
     step = 0
 
 
-    res = traci.simulation.findRoute('start', 'end', 'routeByDistance')
-    traci.route.add('trip', res.edges)
-    traci.vehicle.add('new_veh', 'trip')
+    res_private = traci.simulation.findRoute('start_private', 'end_private', 'routeByDistance')
+    traci.route.add('trip_private', res_private.edges)
+    res_public = traci.simulation.findRoute('start_public', 'end_public', 'routeByDistance')
+    traci.route.add('trip_public', res_public.edges)
+    traci.vehicle.add('new_veh1', 'trip_private')
+    traci.vehicle.add('new_veh2', 'trip_public')
 
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()
