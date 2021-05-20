@@ -3,19 +3,34 @@ import sys
 from sumolib import checkBinary
 import traci
 
+cars = []
+buses = []
 
+def create_vehicles(num_cars, num_buses):
+
+    for i in range(int(num_cars)):
+        cars.append('car'+ str(i))
+
+    for i in range(int(num_buses)):
+        buses.append('bus'+ str(i))
+
+    return
 
 def run():
 
     step = 0
 
-
-    res_private = traci.simulation.findRoute('start_private', 'end_private', 'routeByDistance')
+    res_private = traci.simulation.findRoute('start_private', 'end_private', 'car')
     traci.route.add('trip_private', res_private.edges)
-    res_public = traci.simulation.findRoute('start_public', 'end_public', 'routeByDistance')
+    
+    res_public = traci.simulation.findRoute('start_public', 'end_public', 'bus')
     traci.route.add('trip_public', res_public.edges)
-    traci.vehicle.add('new_veh1', 'trip_private')
-    traci.vehicle.add('new_veh2', 'trip_public')
+
+    for car in cars:
+        traci.vehicle.add(car, 'trip_private', typeID='car')
+
+    for bus in buses:
+        traci.vehicle.add(bus, 'trip_public', typeID='bus')
 
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()
@@ -33,7 +48,6 @@ def run():
 
 
 def main():
-    print('pila???')
     if 'SUMO_HOME' in os.environ:
         tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
         sys.path.append(tools)
@@ -41,15 +55,25 @@ def main():
         print('oh mano nao sejas burro')
         return
 
-    if len(sys.argv) < 2:
+
+    # TODO: Not the best solution
+    if len(sys.argv) != 2  and len(sys.argv) != 4:
         print('need a config oh mano')
         return
 
     binary = checkBinary('sumo-gui')
 
+    num_cars = 200
+    num_buses = 30
 
+    if sys.argv[2:]:
+        num_cars = sys.argv[2]
+
+    if sys.argv[3:]:
+        num_buses = sys.argv[3]
 
     traci.start([binary, '-c', sys.argv[1], '--tripinfo-output', 'tripinfo.xml'])
+    create_vehicles(num_cars, num_buses)
     run()
 
 
