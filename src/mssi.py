@@ -5,6 +5,7 @@ import traci
 
 cars = []
 buses = []
+people = []
 
 def create_vehicles(num_cars, num_buses):
 
@@ -13,6 +14,9 @@ def create_vehicles(num_cars, num_buses):
 
     for i in range(int(num_buses)):
         buses.append('bus'+ str(i))
+
+    for i in range(10):
+        people.append('person' + str(i))
 
     return
 
@@ -31,6 +35,8 @@ def run():
 
     for bus in buses:
         traci.vehicle.add(bus, 'trip_public', typeID='bus')
+
+
 
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep()
@@ -74,6 +80,7 @@ def main():
 
     traci.start([binary, '-c', sys.argv[1], '--tripinfo-output', 'tripinfo.xml'])
     create_vehicles(num_cars, num_buses)
+    print(people)
     run()
 
 
