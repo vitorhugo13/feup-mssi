@@ -2,6 +2,13 @@ import os
 import sys
 import numpy as np
 
+# Table representation 
+
+#                   Car utility |    Bus utility
+#  Start point          23                 30
+
+# each agent will have its own table
+STATE_SIZE = 1
 ACTION_SIZE = 2
 
 # initialize our Q-table
@@ -20,7 +27,7 @@ def update_table():
 
 # entry point
 def main():
-    qlearning_table = create_table(20, ACTION_SIZE)
+    qlearning_table = create_table(STATE_SIZE, ACTION_SIZE)
     choose_action(qlearning_table)
     return
 
