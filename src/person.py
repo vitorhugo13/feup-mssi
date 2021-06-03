@@ -20,6 +20,10 @@ class Person:
     def choose_action(self):
         return choose_action_bandit(self.QLEARNING_TABLE)
     
+    # Index (action chosen by the user)
+    # 0 = private transportation
+    # 1 = public transportation
+
     def update_values(self, index, value):
         self.QLEARNING_TABLE = update_table(self.QLEARNING_TABLE, index, value)
         print(self.QLEARNING_TABLE)
