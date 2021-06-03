@@ -3,6 +3,8 @@ import sys
 from sumolib import checkBinary
 import traci
 
+from person import Person
+
 NUM_CARS = 200
 NUM_BUSES = 30
 
@@ -54,32 +56,45 @@ def simulation():
 
 
 def main():
-    if 'SUMO_HOME' in os.environ:
-        tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
-        sys.path.append(tools)
-    else:
-        print('oh mano nao sejas burro')
-        return
+    # if 'SUMO_HOME' in os.environ:
+    #     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
+    #     sys.path.append(tools)
+    # else:
+    #     print('oh mano nao sejas burro')
+    #     return
 
 
-    # TODO: Not the best solution
-    if len(sys.argv) != 2  and len(sys.argv) != 4:
-        print('need a config oh mano')
-        return
+    # # TODO: Not the best solution
+    # if len(sys.argv) != 2  and len(sys.argv) != 4:
+    #     print('need a config oh mano')
+    #     return
 
-    binary = checkBinary('sumo-gui')
-
-
-    if sys.argv[2:]:
-        num_cars = sys.argv[2]
-
-    if sys.argv[3:]:
-        num_buses = sys.argv[3]
-
-    traci.start([binary, '-c', sys.argv[1], '--tripinfo-output', 'tripinfo.xml'])
-    simulation()
+    # binary = checkBinary('sumo-gui')
 
 
+    # if sys.argv[2:]:
+    #     num_cars = sys.argv[2]
 
+    # if sys.argv[3:]:
+    #     num_buses = sys.argv[3]
+
+    # traci.start([binary, '-c', sys.argv[1], '--tripinfo-output', 'tripinfo.xml'])
+    # simulation()
+
+    # testing class
+    vitor = Person("Vítor")
+    vitor.update_values(1, 20)
+    print('-----')
+    vitor.update_values(0, 100)
+    print('-----')
+    vitor.update_values(0, 10)
+    print('-----')
+    vitor.update_values(1, 30)
+    print('-----')
+    vitor.update_values(0, 20)
+    print('-----')
+    vitor.update_values(1, 20)
+    print('-----')
+    
 if __name__ == '__main__':
     main()
