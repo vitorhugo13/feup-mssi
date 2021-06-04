@@ -8,10 +8,10 @@ ACTION_SIZE = 2
 
 class Person:
     
-    QLEARNING_TABLE = np.zeros((STATE_SIZE, ACTION_SIZE))
 
     def __init__(self, name):
         self.name = name
+        self.QLEARNING_TABLE = np.zeros((STATE_SIZE, ACTION_SIZE))
     
     def my_attributes(self):
         print(self.name)

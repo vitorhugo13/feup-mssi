@@ -69,7 +69,7 @@ def choose_action_bandit(table):
     if(random_value <= EXPLORATION_RATE):
         return random_action_selection()
     else:
-        return np.argmax(table, axis=1)
+        return np.argmax(table, axis=1)[0]
 
 
 # update table using some qlearning equation

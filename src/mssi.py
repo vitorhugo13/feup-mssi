@@ -5,8 +5,7 @@ import traci
 
 from person import Person
 
-NUM_CARS = 200
-NUM_BUSES = 30
+BUS_CAPACITY = 30
 
 def create_vehicles(num_cars, num_buses):
 
@@ -20,24 +19,21 @@ def create_vehicles(num_cars, num_buses):
 
     return cars, buses
 
-def run():
+def run(people):
 
     step = 0
 
     
-    cars, buses = create_vehicles(200, 30)
-
-    for car in cars:
-        traci.vehicle.add(car, 'trip_private', typeID='car')
-
-    for bus in buses:
-        traci.vehicle.add(bus, 'trip_public', typeID='bus')
-
-
-
+    arrived = set()
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep(step=step)
-        step += 1020
+        arrived.update(traci.simulation.getArrivedIDList())
+        step += 1
+
+    
+    num_bus = sum(map(lambda x: 1 if x.startswith('bus') else 0, arrived))
+
+    print(f'number bus:{num_bus} car:{len(arrived)-num_bus}')
 
 
 
@@ -49,52 +45,57 @@ def simulation():
     res_public = traci.simulation.findRoute('start_public', 'end_public', 'bus')
     traci.route.add('trip_public', res_public.edges)
 
-    for day in range(365):
+    people = [Person(f'person_{i}') for i in range(1000)]
+
+    for day in range(15):
+
+
+        private = 0
+        public = 0
+        for person in people:
+
+            action = person.choose_action()
+            if action == 0:
+                traci.vehicle.add(f'car_{private}', 'trip_private', typeID='car')
+                private += 1
+            else:
+                public += 1
+
+                if public % BUS_CAPACITY == 0:
+                    traci.vehicle.add(f'bus_{public//30}', 'trip_public', typeID='bus')
+
+        if public % BUS_CAPACITY:
+            traci.vehicle.add(f'bus_{public//30+1}', 'trip_public', typeID='bus')
+
+        
+
         print(f'\ndia {day}\n')
-        run()
+        print(f'spawnados bus:{public//30 + (1 if public%30 else 0)} car:{private}')
+        run(people)
     traci.close()
 
 
 def main():
-    # if 'SUMO_HOME' in os.environ:
-    #     tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
-    #     sys.path.append(tools)
-    # else:
-    #     print('oh mano nao sejas burro')
-    #     return
+     if 'SUMO_HOME' in os.environ:
+         tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
+         sys.path.append(tools)
+     else:
+         print('oh mano nao sejas burro')
+         return
 
 
-    # # TODO: Not the best solution
-    # if len(sys.argv) != 2  and len(sys.argv) != 4:
-    #     print('need a config oh mano')
-    #     return
+     # TODO: Not the best solution
+     if len(sys.argv) != 2  and len(sys.argv) != 4:
+         print('need a config oh mano')
+         return
 
-    # binary = checkBinary('sumo-gui')
+     binary = checkBinary('sumo-gui')
 
 
-    # if sys.argv[2:]:
-    #     num_cars = sys.argv[2]
+     traci.start([binary, '-c', sys.argv[1], '--tripinfo-output', 'tripinfo.xml'])
+     simulation()
 
-    # if sys.argv[3:]:
-    #     num_buses = sys.argv[3]
 
-    # traci.start([binary, '-c', sys.argv[1], '--tripinfo-output', 'tripinfo.xml'])
-    # simulation()
-
-    # testing class
-    vitor = Person("Vítor")
-    vitor.update_values(1, 20)
-    print('-----')
-    vitor.update_values(0, 100)
-    print('-----')
-    vitor.update_values(0, 10)
-    print('-----')
-    vitor.update_values(1, 30)
-    print('-----')
-    vitor.update_values(0, 20)
-    print('-----')
-    vitor.update_values(1, 20)
-    print('-----')
     
 if __name__ == '__main__':
     main()
