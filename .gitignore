@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 *.swp
 **/tripinfo.xml
+
+**/__pycache__/
