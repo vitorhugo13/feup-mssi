@@ -5,6 +5,33 @@ import traci
 
 from person import Person
 
+
+
+class MssiVehicle:
+
+    def __init__(self, name, start_time):
+        self.name = name
+        self.start_time = start_time
+        self.end_time = None
+        self.emissions = 0
+
+    def set_end_time(self, end_time):
+        self.end_time = end_time
+
+    def update_emissions(self, emissions):
+        self.emissions += emissions
+
+    def __repr__(self):
+        return str(self)
+
+    @property
+    def finished(self):
+        return self.end_time != None
+
+    def __str__(self):
+        return f'Name:{self.name} Emission:{self.emissions} Start:{self.start_time} End:{self.end_time}'
+
+
 BUS_CAPACITY = 30
 
 def create_vehicles(num_cars, num_buses):
@@ -24,16 +51,36 @@ def run(people):
     step = 0
 
     
-    arrived = set()
+
+    vehicles = dict()
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep(step=step)
-        arrived.update(traci.simulation.getArrivedIDList())
+
+        departed = traci.simulation.getDepartedIDList()
+        current_time = traci.simulation.getCurrentTime()
+
+
+        for vehicle in departed:
+            vehicles[vehicle] = MssiVehicle(vehicle, current_time)
+
+        arrived = traci.simulation.getArrivedIDList()
+        for vehicle in arrived:
+            vehicles[vehicle].set_end_time(current_time)
+
+        for _, mssi_vehicle in vehicles.items():
+            if mssi_vehicle.finished:
+                continue
+            mssi_vehicle.update_emissions(traci.vehicle.getCO2Emission(mssi_vehicle.name))
+
+
+
         step += 1
 
     
     num_bus = sum(map(lambda x: 1 if x.startswith('bus') else 0, arrived))
 
     print(f'number bus:{num_bus} car:{len(arrived)-num_bus}')
+    print(vehicles)
 
 
 
@@ -62,12 +109,12 @@ def simulation():
                 public += 1
 
                 if public % BUS_CAPACITY == 0:
-                    traci.vehicle.add(f'bus_{public//30}', 'trip_public', typeID='bus')
+                    traci.vehicle.add(f'bus_{(public//30)-1}', 'trip_public', typeID='bus')
 
         if public % BUS_CAPACITY:
-            traci.vehicle.add(f'bus_{public//30+1}', 'trip_public', typeID='bus')
+            traci.vehicle.add(f'bus_{public//30}', 'trip_public', typeID='bus')
 
-        
+
 
         print(f'\ndia {day}\n')
         print(f'spawnados bus:{public//30 + (1 if public%30 else 0)} car:{private}')
