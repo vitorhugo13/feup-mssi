@@ -44,8 +44,6 @@ def bellman_equation(index, utility, table):
 def bandit_algorithm(index, reward, table):
     increment()
     update_exploration_rate()
-    print(N)
-    print(EXPLORATION_RATE)
     return table[0, index] + (1/N)*(reward - table[0, index])
 
 # choose action that agent will choose (max_utility)

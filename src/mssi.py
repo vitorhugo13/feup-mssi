@@ -2,9 +2,25 @@ import os
 import sys
 from sumolib import checkBinary
 import traci
+import random
 
 from person import Person
 
+
+def objective(t, p, c):
+    return 2*t + p/2 + c/3
+
+def public_objective(waiting, travel, emission, ticketprice):
+    t = 2*waiting + travel
+    p = emission
+    c = ticketprice
+    return objective(t, p, c)
+
+def private_objective(travel, emission, costs):
+    t = travel
+    p = emission
+    c = costs
+    return objective(t, p, c)
 
 
 class MssiVehicle:
@@ -14,6 +30,7 @@ class MssiVehicle:
         self.start_time = start_time
         self.end_time = None
         self.emissions = 0
+        self.fuel_consumption = 0
 
     def set_end_time(self, end_time):
         self.end_time = end_time
@@ -21,8 +38,15 @@ class MssiVehicle:
     def update_emissions(self, emissions):
         self.emissions += emissions
 
+    def update_fuel_consumption(self, fuel_consumption):
+        self.fuel_consumption += fuel_consumption
+
     def __repr__(self):
         return str(self)
+
+    @property
+    def travel_time(self):
+        return self.end_time - self.start_time
 
     @property
     def finished(self):
@@ -32,33 +56,18 @@ class MssiVehicle:
         return f'Name:{self.name} Emission:{self.emissions} Start:{self.start_time} End:{self.end_time}'
 
 
-BUS_CAPACITY = 30
 
-def create_vehicles(num_cars, num_buses):
 
-    cars = []
-    buses = []
-    for i in range(num_cars):
-        cars.append('car'+ str(i))
-
-    for i in range(num_buses):
-        buses.append('bus'+ str(i))
-
-    return cars, buses
-
-def run(people):
+def run():
 
     step = 0
 
-    
-
     vehicles = dict()
     while traci.simulation.getMinExpectedNumber() > 0:
-        traci.simulationStep(step=step)
+        traci.simulationStep(step=float(step))
 
         departed = traci.simulation.getDepartedIDList()
-        current_time = traci.simulation.getCurrentTime()
-
+        current_time = traci.simulation.getTime()
 
         for vehicle in departed:
             vehicles[vehicle] = MssiVehicle(vehicle, current_time)
@@ -71,17 +80,41 @@ def run(people):
             if mssi_vehicle.finished:
                 continue
             mssi_vehicle.update_emissions(traci.vehicle.getCO2Emission(mssi_vehicle.name))
-
-
+            mssi_vehicle.update_fuel_consumption(traci.vehicle.getFuelConsumption(mssi_vehicle.name))
 
         step += 1
 
     
-    num_bus = sum(map(lambda x: 1 if x.startswith('bus') else 0, arrived))
+    return vehicles
 
-    print(f'number bus:{num_bus} car:{len(arrived)-num_bus}')
-    print(vehicles)
 
+
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
+BUS_CAPACITY = 30
+FUEL_COST = 5/1000
+def distribute(people):
+
+    car = []
+    bus = []
+
+
+    for person in people:
+
+        action = person.choose_action()
+
+        if action == 0:
+            car.append(person)
+        else:
+            bus.append(person)
+
+
+    buses = [x for x in chunks(bus, BUS_CAPACITY)]
+
+    return (car, buses)
 
 
 def simulation():
@@ -92,33 +125,35 @@ def simulation():
     res_public = traci.simulation.findRoute('start_public', 'end_public', 'bus')
     traci.route.add('trip_public', res_public.edges)
 
-    people = [Person(f'person_{i}') for i in range(1000)]
+    people = [Person(f'person_{i}') for i in range(100)]
 
     for day in range(15):
 
 
-        private = 0
-        public = 0
-        for person in people:
+        cars, buses = distribute(people)
+        for index, person in enumerate(cars):
+            name = f'car_{index}'
+            traci.vehicle.add(name, 'trip_private', typeID='car')
+            person.set_vehicle(name)
 
-            action = person.choose_action()
-            if action == 0:
-                traci.vehicle.add(f'car_{private}', 'trip_private', typeID='car')
-                private += 1
-            else:
-                public += 1
-
-                if public % BUS_CAPACITY == 0:
-                    traci.vehicle.add(f'bus_{(public//30)-1}', 'trip_public', typeID='bus')
-
-        if public % BUS_CAPACITY:
-            traci.vehicle.add(f'bus_{public//30}', 'trip_public', typeID='bus')
-
-
+        for index, lst_person in enumerate(buses):
+            name = f'bus_{index}'
+            traci.vehicle.add(name, 'trip_public', typeID='bus')
+            for person in lst_person:
+                person.set_vehicle(name)
 
         print(f'\ndia {day}\n')
-        print(f'spawnados bus:{public//30 + (1 if public%30 else 0)} car:{private}')
-        run(people)
+        print(f'spawnados bus:{len(buses)} car:{len(cars)}')
+        vehicle_data = run()
+
+        for person in people:
+
+            mssi_vehicle = vehicle_data[person.vehicle]
+            if person.vehicle.startswith('car'):
+                person.update_values(private_objective(mssi_vehicle.travel_time, mssi_vehicle.emissions, FUEL_COST * mssi_vehicle.fuel_consumption))
+            else:
+                person.update_values(public_objective(max(0, random.gauss(5, 2)*60), mssi_vehicle.travel_time, mssi_vehicle.emissions, 2))
+
     traci.close()
 
 
@@ -136,7 +171,7 @@ def main():
          print('need a config oh mano')
          return
 
-     binary = checkBinary('sumo-gui')
+     binary = checkBinary('sumo')
 
 
      traci.start([binary, '-c', sys.argv[1], '--tripinfo-output', 'tripinfo.xml'])
