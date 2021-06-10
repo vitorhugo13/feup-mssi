@@ -99,7 +99,7 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 BUS_CAPACITY = 30
-FUEL_COST = 5/1000
+FUEL_COST = 1.5/1000
 def distribute(people):
 
     car = []
