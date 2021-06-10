@@ -83,7 +83,7 @@ class Person:
         if(random_value <= self.EXPLORATION_RATE):
             return self.random_action_selection()
         else:
-            return np.argmax(table, axis=1)[0]
+            return np.argmin(table, axis=1)[0]
 
 
     # update table using some qlearning equation

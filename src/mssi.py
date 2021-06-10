@@ -3,6 +3,7 @@ import sys
 from sumolib import checkBinary
 import traci
 import random
+import time
 
 from person import Person
 
@@ -41,6 +42,10 @@ class MssiVehicle:
     def update_fuel_consumption(self, fuel_consumption):
         self.fuel_consumption += fuel_consumption
 
+    def reset(self):
+        self.emissions = 0
+        self.fuel_consumption = 0
+
     def __repr__(self):
         return str(self)
 
@@ -58,10 +63,10 @@ class MssiVehicle:
 
 
 
+step = 0
 def run():
 
-    step = 0
-
+    global step
     vehicles = dict()
     while traci.simulation.getMinExpectedNumber() > 0:
         traci.simulationStep(step=float(step))
@@ -84,7 +89,6 @@ def run():
 
         step += 1
 
-    
     return vehicles
 
 
@@ -95,7 +99,7 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 BUS_CAPACITY = 30
-FUEL_COST = 5/1000
+FUEL_COST = 1.5/1000
 def distribute(people):
 
     car = []
@@ -117,8 +121,19 @@ def distribute(people):
     return (car, buses)
 
 
-def simulation():
 
+def spit_out(fp, day, person, mssi_vehicle, utility):
+    typ = 'car' if mssi_vehicle.name.startswith('car') else 'bus'
+    fp.write(f'{day},{mssi_vehicle.name},{person.name},{typ},{mssi_vehicle.emissions},{mssi_vehicle.fuel_consumption},{mssi_vehicle.travel_time},{utility}\n')
+    return
+
+
+def simulation(file_name):
+
+
+
+    fp = open(file_name, 'w')
+    fp.write('day,vehicle_name,name,type,emissions,fuel_consumption,travel_time,utility\n')
     res_private = traci.simulation.findRoute('start_private', 'end_private', 'car')
     traci.route.add('trip_private', res_private.edges)
     
@@ -127,8 +142,7 @@ def simulation():
 
     people = [Person(f'person_{i}') for i in range(100)]
 
-    for day in range(15):
-
+    for day in range(300):
 
         cars, buses = distribute(people)
         for index, person in enumerate(cars):
@@ -149,12 +163,22 @@ def simulation():
         for person in people:
 
             mssi_vehicle = vehicle_data[person.vehicle]
+            utility = 0
             if person.vehicle.startswith('car'):
-                person.update_values(private_objective(mssi_vehicle.travel_time, mssi_vehicle.emissions, FUEL_COST * mssi_vehicle.fuel_consumption))
+                utility = private_objective(mssi_vehicle.travel_time, mssi_vehicle.emissions, FUEL_COST * mssi_vehicle.fuel_consumption)
             else:
-                person.update_values(public_objective(max(0, random.gauss(5, 2)*60), mssi_vehicle.travel_time, mssi_vehicle.emissions, 2))
+                utility = public_objective(max(0, random.gauss(5, 2)*60), mssi_vehicle.travel_time, mssi_vehicle.emissions, 2)
+            person.update_values(utility)
+            spit_out(fp, day, person, mssi_vehicle, utility)
+
+
+        for car in cars:
+            car
 
     traci.close()
+    fp.close()
+
+
 
 
 def main():
@@ -167,7 +191,7 @@ def main():
 
 
      # TODO: Not the best solution
-     if len(sys.argv) != 2  and len(sys.argv) != 4:
+     if len(sys.argv) != 3:
          print('need a config oh mano')
          return
 
@@ -175,7 +199,9 @@ def main():
 
 
      traci.start([binary, '-c', sys.argv[1], '--tripinfo-output', 'tripinfo.xml'])
-     simulation()
+
+
+     simulation(sys.argv[2])
 
 
     
