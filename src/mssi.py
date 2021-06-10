@@ -142,7 +142,7 @@ def simulation(file_name):
 
     people = [Person(f'person_{i}') for i in range(100)]
 
-    for day in range(300):
+    for day in range(365):
 
         cars, buses = distribute(people)
         for index, person in enumerate(cars):
