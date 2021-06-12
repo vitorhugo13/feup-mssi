@@ -167,7 +167,9 @@ def simulation(file_name):
             if person.vehicle.startswith('car'):
                 utility = private_objective(mssi_vehicle.travel_time, mssi_vehicle.emissions, FUEL_COST * mssi_vehicle.fuel_consumption)
             else:
-                utility = public_objective(max(0, random.gauss(5, 2)*60), mssi_vehicle.travel_time, mssi_vehicle.emissions, 2)
+                mean_wait_time=5
+                sigma = mean_wait_time//2
+                utility = public_objective(max(0, random.gauss(mean_wait_time, sigma)*60), mssi_vehicle.travel_time, mssi_vehicle.emissions, 2)
             person.update_values(utility)
             spit_out(fp, day, person, mssi_vehicle, utility)
 
