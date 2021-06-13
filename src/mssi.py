@@ -37,7 +37,7 @@ class MssiVehicle:
         self.end_time = end_time
 
     def update_emissions(self, emissions):
-        self.emissions += emissions
+        self.emissions += emissions/100000
 
     def update_fuel_consumption(self, fuel_consumption):
         self.fuel_consumption += fuel_consumption
