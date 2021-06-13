@@ -12,7 +12,7 @@ def objective(t, p, c):
     return 2*t + p/2 + c/3
 
 def public_objective(waiting, travel, emission, ticketprice):
-    t = 2*waiting + travel
+    t = (waiting + travel)/2
     p = emission
     c = ticketprice
     return objective(t, p, c)
@@ -20,7 +20,7 @@ def public_objective(waiting, travel, emission, ticketprice):
 def private_objective(travel, emission, costs):
     t = travel
     p = emission
-    c = costs
+    c = costs*1.5
     return objective(t, p, c)
 
 
@@ -37,7 +37,7 @@ class MssiVehicle:
         self.end_time = end_time
 
     def update_emissions(self, emissions):
-        self.emissions += emissions/100000
+        self.emissions += emissions/10000
 
     def update_fuel_consumption(self, fuel_consumption):
         self.fuel_consumption += fuel_consumption
@@ -99,7 +99,7 @@ def chunks(lst, n):
         yield lst[i:i + n]
 
 BUS_CAPACITY = 30
-FUEL_COST = 1.5/1000
+FUEL_COST = 1.5/10
 def distribute(people):
 
     car = []
