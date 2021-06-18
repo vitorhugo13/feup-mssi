@@ -188,13 +188,13 @@ def main():
          tools = os.path.join(os.environ['SUMO_HOME'], 'tools')
          sys.path.append(tools)
      else:
-         print('oh mano nao sejas burro')
+         print('Error parsing arguments')
          return
 
 
      # TODO: Not the best solution
      if len(sys.argv) != 3:
-         print('need a config oh mano')
+         print('Error parsing arguments')
          return
 
      binary = checkBinary('sumo')
